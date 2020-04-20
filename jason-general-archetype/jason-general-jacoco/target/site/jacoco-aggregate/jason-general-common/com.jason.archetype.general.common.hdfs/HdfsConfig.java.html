@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/>
+    <link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/>
+    <title>HdfsConfig.java</title>
+    <link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/>
+    <script type="text/javascript" src="../../jacoco-resources/prettify.js"></script>
+</head>
+<body onload="window['PR_TAB_WIDTH']=4;prettyPrint()">
+<div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a
+        href="../../index.html" class="el_report">jason-general-jacoco</a> &gt; <a href="../index.html"
+                                                                                   class="el_bundle">jason-general-common</a>
+    &gt; <a href="index.source.html" class="el_package">com.jason.archetype.general.common.hdfs</a> &gt; <span
+            class="el_source">HdfsConfig.java</span></div>
+<h1>HdfsConfig.java</h1>
+<pre class="source lang-java linenums">package com.jason.archetype.general.common.hdfs;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * @author jasonCQ
+ * @version 1.0
+ * @date 2020/3/11 16:45
+ */
+@Configuration
+<span class="fc" id="L13">public class HdfsConfig {</span>
+    @Value(&quot;${jason.image.hdfsUrl}&quot;)
+    private String hdfsUri;
+
+    @Bean
+    public org.apache.hadoop.conf.Configuration setHdfsConfiguration() {
+<span class="fc" id="L19">        org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();</span>
+        //要以root方式登录，默认是本机用户名 sk-qianxiao， 权限不足
+<span class="fc" id="L21">        System.setProperty(&quot;HADOOP_USER_NAME&quot;, &quot;hdfs&quot;);</span>
+
+
+<span class="fc" id="L24">        conf.addResource(&quot;core-site.xml&quot;);</span>
+<span class="fc" id="L25">        conf.addResource(&quot;hdfs-site.xml&quot;);</span>
+//        conf.set(&quot;fs.hdfs.impl&quot;,&quot;org.apache.hadoop.hdfs.DistributedFileSystem&quot;);
+        //使用主机名进行访问，要不然hdfs返回的就是内网ip
+//        conf.set(&quot;dfs.client.use.datanode.hostname&quot;, &quot;true&quot;);
+//        conf.set(&quot;fs.defaultFS&quot;, hdfsUri);
+//        //设置失败重试次数, 默认3次
+//        conf.set(&quot;dfs.client.max.block.acquire.failures&quot;, &quot;1&quot;);
+<span class="fc" id="L32">        return conf;</span>
+    }
+}
+</pre>
+<div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span>
+</div>
+</body>
+</html>

@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/>
+    <link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/>
+    <title>HdfsService.java</title>
+    <link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/>
+    <script type="text/javascript" src="../../jacoco-resources/prettify.js"></script>
+</head>
+<body onload="window['PR_TAB_WIDTH']=4;prettyPrint()">
+<div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a
+        href="../../index.html" class="el_report">jason-general-jacoco</a> &gt; <a href="../index.html"
+                                                                                   class="el_bundle">jason-general-common</a>
+    &gt; <a href="index.source.html" class="el_package">com.jason.archetype.general.common.hdfs</a> &gt; <span
+            class="el_source">HdfsService.java</span></div>
+<h1>HdfsService.java</h1>
+<pre class="source lang-java linenums">package com.jason.archetype.general.common.hdfs;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Component
+<span class="fc" id="L18">public class HdfsService {</span>
+    @Autowired
+    private Configuration hdfsConfig;
+
+<span class="fc" id="L22">    protected final Logger logger = LoggerFactory.getLogger(this.getClass());</span>
+
+    /**
+     * 获取HDFS文件系统(按新配置生成，供外部使用)
+     * @param hdfsConfig  提供其他配置
+     * @return org.apache.hadoop.fs.FileSystem
+     */
+    public FileSystem getFileSystem(Configuration hdfsConfig) throws IOException {
+<span class="nc" id="L30">        return FileSystem.get(hdfsConfig);</span>
+    }
+
+    /**
+     * 获取HDFS文件系统(按已有配置生成，供内部使用)
+     *
+     * @return org.apache.hadoop.fs.FileSystem
+     */
+    private FileSystem getFileSystem() throws IOException {
+<span class="fc" id="L39">        return FileSystem.get(hdfsConfig);</span>
+    }
+
+    /**
+     * 判断文件或者目录是否在HDFS上面存在
+     *
+     * @param path HDFS的相对目录路径，比如：/testDir、/testDir/a.txt
+     * @return boolean
+     */
+    public boolean checkExists(String path) {
+<span class="fc" id="L49">        try (FileSystem fileSystem = getFileSystem()) {</span>
+
+            //最终的HDFS文件目录
+<span class="fc" id="L52">            String hdfsPath = generateHdfsPath(path);</span>
+
+            //创建目录
+<span class="fc" id="L55">            return fileSystem.exists(new Path(hdfsPath));</span>
+<span class="nc" id="L56">        } catch (IOException e) {</span>
+<span class="nc" id="L57">            logger.error(MessageFormat.format(&quot;'判断文件或者目录是否在HDFS上面存在'失败，path:{0}&quot;, path), e);</span>
+<span class="nc" id="L58">            return false;</span>
+        }
+    }
+
+    /**
+     * 创建HDFS目录
+     *
+     * @param path HDFS的相对目录路径，比如：/testDir
+     * @return boolean 是否创建成功
+     */
+    public boolean mkdir(String path) {
+<span class="fc" id="L69">        try (FileSystem fileSystem = getFileSystem()) {</span>
+<span class="pc bpc" id="L70"
+      title="1 of 2 branches missed.">            if (!fileSystem.exists(new Path(path))) {</span>
+                //最终的HDFS文件目录
+<span class="fc" id="L72">                String hdfsPath = generateHdfsPath(path);</span>
+                //创建目录
+<span class="fc" id="L74">                return fileSystem.mkdirs(new Path(hdfsPath));</span>
+            } else {
+<span class="nc" id="L76">                return true;</span>
+            }
+
+<span class="nc" id="L79">        } catch (IOException e) {</span>
+<span class="nc"
+      id="L80">            logger.error(MessageFormat.format(&quot;创建HDFS目录失败，path:{0}&quot;, path), e);</span>
+<span class="nc" id="L81">            return false;</span>
+        }
+    }
+
+
+    /**
+     * 上传文件至HDFS
+     *
+     * @param srcFile 本地文件路径，比如：D:/test.txt
+     * @param dstPath HDFS的相对目录路径，比如：/testDir
+     */
+    public void uploadFileToHdfs(String srcFile, String dstPath) {
+<span class="fc" id="L93">        this.uploadFileToHdfs(false, true, srcFile, dstPath);</span>
+<span class="fc" id="L94">    }</span>
+
+    /**
+     * 上传文件至HDFS
+     *
+     * @param delSrc    是否删除本地文件
+     * @param overwrite 是否覆盖HDFS上面的文件
+     * @param srcFile   本地文件路径，比如：D:/test.txt
+     * @param dstPath   HDFS的相对目录路径，比如：/testDir
+     */
+    public void uploadFileToHdfs(boolean delSrc, boolean overwrite, String srcFile, String dstPath) {
+        //源文件路径
+<span class="fc" id="L106">        Path localSrcPath = new Path(srcFile);</span>
+        //目标文件路径
+<span class="fc" id="L108">        Path hdfsDstPath = new Path(generateHdfsPath(dstPath));</span>
+
+<span class="fc" id="L110">        try (FileSystem fileSystem = getFileSystem()) {</span>
+<span class="fc"
+      id="L111">            fileSystem.copyFromLocalFile(delSrc, overwrite, localSrcPath, hdfsDstPath);</span>
+<span class="nc" id="L112">        } catch (IOException e) {</span>
+<span class="nc" id="L113">            logger.error(MessageFormat.format(&quot;上传文件至HDFS失败，srcFile:{0},dstPath:{1}&quot;, srcFile, dstPath), e);</span>
+<span class="fc" id="L114">        }</span>
+<span class="fc" id="L115">    }</span>
+
+    /**
+     * 上传文件至HDFS
+     *
+     * @param bytes   上传的字节流
+     * @param dstPath HDFS的相对目录文件，比如：/test.txt
+     */
+    public void uploadByteFileToHdfs(byte[] bytes, String dstPath) {
+        //目标文件路径
+<span class="fc" id="L125">        Path hdfsDstPath = new Path(generateHdfsPath(dstPath));</span>
+
+<span class="fc" id="L127">        try (FileSystem fileSystem = getFileSystem();</span>
+<span class="fc" id="L128">             FSDataOutputStream fs = fileSystem.create(hdfsDstPath)) {</span>
+<span class="fc" id="L129">            fs.write(bytes);</span>
+<span class="fc" id="L130">            fs.flush();</span>
+<span class="nc" id="L131">        } catch (IOException e) {</span>
+<span class="nc" id="L132">            logger.error(MessageFormat.format(&quot;上传文件至HDFS失败，dstPath:{1}&quot;, dstPath), e);</span>
+<span class="fc" id="L133">        }</span>
+<span class="fc" id="L134">    }</span>
+
+    /**
+     * 上传文件至HDFS
+     *
+     * @param dstPath HDFS的相对目录文件，比如：/test.txt
+     */
+    public byte[] downloadByteFileFromHdfs(String dstPath) {
+        //目标文件路径
+<span class="fc" id="L143">        Path hdfsDstPath = new Path(generateHdfsPath(dstPath));</span>
+
+<span class="fc" id="L145">        try (FileSystem fileSystem = getFileSystem();</span>
+<span class="fc" id="L146">             FSDataInputStream fs = fileSystem.open(hdfsDstPath)) {</span>
+<span class="fc" id="L147">            byte[] bytes = new byte[fs.available()];</span>
+<span class="fc" id="L148">            fs.read(bytes);</span>
+<span class="fc" id="L149">            return bytes;</span>
+<span class="nc" id="L150">        } catch (IOException e) {</span>
+<span class="nc" id="L151">            logger.error(MessageFormat.format(&quot;上传文件至HDFS失败，dstPath:{1}&quot;, dstPath), e);</span>
+        }
+<span class="nc" id="L153">        return null;</span>
+    }
+
+    /**
+     * 获取HDFS上面的某个路径下面的所有文件或目录（不包含子目录）信息
+     *
+     * @param path HDFS的相对目录路径，比如：/testDir
+     * @return java.util.List&lt;java.util.Map &lt; java.lang.String, java.lang.Object&gt;&gt;
+     */
+    public List&lt;Map&lt;String, Object&gt;&gt; listFiles(String path, PathFilter pathFilter) {
+        //返回数据
+<span class="fc" id="L164">        List&lt;Map&lt;String, Object&gt;&gt; result = new ArrayList&lt;&gt;();</span>
+
+        //如果目录已经存在，则继续操作
+
+<span class="fc" id="L168">        try (FileSystem fileSystem = getFileSystem()) {</span>
+<span class="pc bpc" id="L169"
+      title="1 of 2 branches missed.">            if (fileSystem.exists(new Path(path))) {</span>
+                //最终的HDFS文件目录
+<span class="fc" id="L171">                String hdfsPath = generateHdfsPath(path);</span>
+
+                FileStatus[] statuses;
+                //根据Path过滤器查询
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                if (pathFilter != null) {</span>
+<span class="nc" id="L176">                    statuses = fileSystem.listStatus(new Path(hdfsPath), pathFilter);</span>
+                } else {
+<span class="fc" id="L178">                    statuses = fileSystem.listStatus(new Path(hdfsPath));</span>
+                }
+
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">                if (statuses != null) {</span>
+<span class="fc bfc" id="L182"
+      title="All 2 branches covered.">                    for (FileStatus status : statuses) {</span>
+                        //每个文件的属性
+<span class="fc" id="L184">                        Map&lt;String, Object&gt; fileMap = new HashMap&lt;&gt;(2);</span>
+<span class="fc" id="L185">                        fileMap.put(&quot;path&quot;, status.getPath().toString());</span>
+<span class="fc" id="L186">                        fileMap.put(&quot;isDir&quot;, status.isDirectory());</span>
+<span class="fc" id="L187">                        result.add(fileMap);</span>
+                    }
+                }
+            }
+<span class="nc" id="L191">        } catch (IOException e) {</span>
+<span class="nc" id="L192">            logger.error(MessageFormat.format(&quot;获取HDFS上面的某个路径下面的所有文件失败，path:{0}&quot;, path), e);</span>
+<span class="fc" id="L193">        }</span>
+
+<span class="fc" id="L195">        return result;</span>
+    }
+
+
+    /**
+     * 从HDFS下载文件至本地
+     *
+     * @param srcFile HDFS的相对目录路径，比如：/testDir/a.txt
+     * @param dstFile 下载之后本地文件路径（如果本地文件目录不存在，则会自动创建），比如：D:/test.txt
+     */
+    public void downloadFileFromHdfs(String srcFile, String dstFile) {
+        //HDFS文件路径
+<span class="fc" id="L207">        Path hdfsSrcPath = new Path(generateHdfsPath(srcFile));</span>
+        //下载之后本地文件路径
+<span class="fc" id="L209">        Path localDstPath = new Path(dstFile);</span>
+
+<span class="fc" id="L211">        try (FileSystem fileSystem = getFileSystem()) {</span>
+<span class="fc" id="L212">            fileSystem.copyToLocalFile(hdfsSrcPath, localDstPath);</span>
+<span class="nc" id="L213">        } catch (IOException e) {</span>
+<span class="nc" id="L214">            logger.error(MessageFormat.format(&quot;从HDFS下载文件至本地失败，srcFile:{0},dstFile:{1}&quot;, srcFile, dstFile), e);</span>
+<span class="fc" id="L215">        }</span>
+<span class="fc" id="L216">    }</span>
+
+    /**
+     * 重命名
+     *
+     * @param srcFile 重命名之前的HDFS的相对目录路径，比如：/testDir/b.txt
+     * @param dstFile 重命名之后的HDFS的相对目录路径，比如：/testDir/b_new.txt
+     */
+    public boolean rename(String srcFile, String dstFile) {
+        //HDFS文件路径
+<span class="fc" id="L226">        Path srcFilePath = new Path(generateHdfsPath(srcFile));</span>
+        //下载之后本地文件路径
+<span class="fc" id="L228">        Path dstFilePath = new Path(generateHdfsPath(dstFile));</span>
+
+<span class="fc" id="L230">        try (FileSystem fileSystem = getFileSystem()) {</span>
+<span class="fc" id="L231">            return fileSystem.rename(srcFilePath, dstFilePath);</span>
+<span class="nc" id="L232">        } catch (IOException e) {</span>
+<span class="nc" id="L233">            logger.error(MessageFormat.format(&quot;重命名失败，srcFile:{0},dstFile:{1}&quot;, srcFile, dstFile), e);</span>
+        }
+<span class="nc" id="L235">        return false;</span>
+    }
+
+    /**
+     * 删除HDFS文件或目录
+     *
+     * @param path HDFS的相对目录路径，比如：/testDir/c.txt
+     * @return boolean
+     */
+    public boolean delete(String path) {
+        //HDFS文件路径
+<span class="fc" id="L246">        Path hdfsPath = new Path(generateHdfsPath(path));</span>
+
+<span class="fc" id="L248">        try (FileSystem fileSystem = getFileSystem()) {</span>
+<span class="fc" id="L249">            return fileSystem.delete(hdfsPath, true);</span>
+<span class="nc" id="L250">        } catch (IOException e) {</span>
+<span class="nc"
+      id="L251">            logger.error(MessageFormat.format(&quot;删除HDFS文件或目录失败，path:{0}&quot;, path), e);</span>
+        }
+
+<span class="nc" id="L254">        return false;</span>
+    }
+
+    /**
+     * 将相对路径转化为HDFS文件路径
+     *
+     * @param dstPath 相对路径，比如：/data
+     * @return java.lang.String
+     */
+    private String generateHdfsPath(String dstPath) {
+<span class="fc" id="L264">        String hdfsPath = hdfsConfig.get(&quot;fs.defaultFS&quot;);</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">        if (dstPath.startsWith(&quot;/&quot;)) {</span>
+<span class="fc" id="L266">            hdfsPath += dstPath;</span>
+        } else {
+<span class="nc" id="L268">            hdfsPath = hdfsPath + &quot;/&quot; + dstPath;</span>
+        }
+
+<span class="fc" id="L271">        return hdfsPath;</span>
+    }
+}
+</pre>
+<div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span>
+</div>
+</body>
+</html>

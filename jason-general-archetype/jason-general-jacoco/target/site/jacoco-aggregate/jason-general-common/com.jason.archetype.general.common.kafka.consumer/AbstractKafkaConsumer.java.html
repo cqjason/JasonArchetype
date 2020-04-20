@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/>
+    <link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/>
+    <title>AbstractKafkaConsumer.java</title>
+    <link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/>
+    <script type="text/javascript" src="../../jacoco-resources/prettify.js"></script>
+</head>
+<body onload="window['PR_TAB_WIDTH']=4;prettyPrint()">
+<div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a
+        href="../../index.html" class="el_report">jason-general-jacoco</a> &gt; <a href="../index.html"
+                                                                                   class="el_bundle">jason-general-common</a>
+    &gt; <a href="index.source.html" class="el_package">com.jason.archetype.general.common.kafka.consumer</a> &gt; <span
+            class="el_source">AbstractKafkaConsumer.java</span></div>
+<h1>AbstractKafkaConsumer.java</h1>
+<pre class="source lang-java linenums">package com.jason.archetype.general.common.kafka.consumer;
+
+import org.apache.kafka.common.utils.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+
+/**
+ * @author: sk-shanjiang
+ * @date: 2019/10/25 15:32
+ */
+<span class="fc" id="L22">public abstract class AbstractKafkaConsumer&lt;T&gt; {</span>
+    @Value(&quot;${com.skspruce.ism.mobile.sync.base.ThreadPoolExecutorConfig.threadFactory.name:sync-base-default-thread-pool}&quot;)
+    private String threadFactoryName;
+
+    @Value(&quot;${com.skspruce.ism.mobile.sync.base.ThreadPoolExecutorConfig.thread.num:4}&quot;)
+    private int threadNum;
+
+    @Value(&quot;${com.skspruce.ism.mobile.sync.base.ThreadPoolExecutorConfig.queue.capacity:4000}&quot;)
+    private int queueCapacity;
+
+    @Value(&quot;${com.skspruce.ism.mobile.sync.base.ThreadPoolExecutorConfig.keepAlive.seconds:60}&quot;)
+    private int keepAliveTime;
+
+<span class="fc" id="L35">    protected Logger logger = LoggerFactory.getLogger(this.getClass());</span>
+
+    @Autowired()
+    @Qualifier(&quot;defaultConsumerThreadPoolExecutor&quot;)
+    private Executor executorService;
+
+    /**
+     * default ThreadPoolExecutor
+     * @return
+     */
+    @Bean(name = &quot;defaultConsumerThreadPoolExecutor&quot;)
+    protected Executor createExecutor() {
+<span class="fc" id="L47">        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();</span>
+        // 设置核心线程数
+<span class="fc" id="L49">        executor.setCorePoolSize(threadNum);</span>
+        // 设置最大线程数
+<span class="fc" id="L51">        executor.setMaxPoolSize(threadNum);</span>
+        // 设置队列容量
+<span class="fc" id="L53">        executor.setQueueCapacity(queueCapacity);</span>
+        // 设置线程活跃时间（秒）
+<span class="fc" id="L55">        executor.setKeepAliveSeconds(keepAliveTime);</span>
+        // 设置默认线程名称
+<span class="fc" id="L57">        executor.setThreadNamePrefix(threadFactoryName);</span>
+        // 设置拒绝策略
+<span class="fc" id="L59">        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());</span>
+<span class="fc" id="L60">        executor.initialize();</span>
+<span class="fc" id="L61">        return executor;</span>
+    }
+
+    /**
+     * KafkaListener's method call. It provide a entrance to KafkaListener
+     * @param recordList
+     * @param ack
+     */
+    protected abstract void consume(List&lt;Bytes&gt; recordList, Acknowledgment ack);
+
+    /**
+     * It is a template method of consumer
+     * @param recordList
+     * @param ack
+     */
+    protected final void extractRecord(List&lt;Bytes&gt; recordList, Acknowledgment ack){
+<span class="fc" id="L77">        recordList.stream().forEach(record -&gt;{</span>
+<span class="fc" id="L78">            String recordStr = null;</span>
+            try{
+<span class="fc" id="L80">                T parserRecord = parse(record, getClassOfTemplate());</span>
+<span class="fc" id="L81">                executorService.execute(() -&gt; process(parserRecord));</span>
+<span class="nc" id="L82">            } catch (RejectedExecutionException e){</span>
+                //Throw RejectedExecutionException when taskQueue is full because of executing AbortPolicy
+<span class="nc" id="L84">                logger.warn(&quot;Submited recordStr submit failed: &quot;, recordStr);</span>
+<span class="nc" id="L85">                logger.warn(&quot;ThreadPoolExecutor submit failed: &quot;, e);</span>
+                //todo for executorService is busy
+<span class="nc" id="L87">            } catch (Exception e){</span>
+<span class="nc" id="L88">                logger.warn(&quot;Kafka extractRecord failed: &quot;, e);</span>
+<span class="pc" id="L89">            }</span>
+<span class="fc" id="L90">        });</span>
+<span class="fc" id="L91">        ack.acknowledge();</span>
+<span class="fc" id="L92">    }</span>
+
+    /**
+     * process parserRecord
+     * @param parserRecord
+     * @return Runnable
+     */
+    protected abstract  void process(T parserRecord);
+
+    /**
+     * parse Bytes record  to T record.
+     * @param bytes
+     * @param classOfTemplate
+     * @return
+     */
+    protected abstract T parse(Bytes bytes, Class&lt;T&gt; classOfTemplate);
+
+    /**
+     * get Class of T
+     * @return Class&lt;T&gt;
+     */
+    protected abstract Class&lt;T&gt; getClassOfTemplate();
+}
+</pre>
+<div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span>
+</div>
+</body>
+</html>

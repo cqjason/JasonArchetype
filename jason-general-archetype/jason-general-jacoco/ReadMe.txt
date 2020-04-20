@@ -1,0 +1,1 @@
+When you run:mvn clean test under jason-general,the jacoco report of other modules will be aggregated to directory "target/site/jacoco-aggregate/index.html" in jason-general-jacoco

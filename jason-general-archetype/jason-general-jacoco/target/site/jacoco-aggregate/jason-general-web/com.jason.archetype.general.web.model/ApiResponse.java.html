@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/>
+    <link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/>
+    <title>ApiResponse.java</title>
+    <link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/>
+    <script type="text/javascript" src="../../jacoco-resources/prettify.js"></script>
+</head>
+<body onload="window['PR_TAB_WIDTH']=4;prettyPrint()">
+<div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a
+        href="../../index.html" class="el_report">jason-general-jacoco</a> &gt; <a href="../index.html"
+                                                                                   class="el_bundle">jason-general-web</a>
+    &gt; <a href="index.source.html" class="el_package">com.jason.archetype.general.web.model</a> &gt; <span
+            class="el_source">ApiResponse.java</span></div>
+<h1>ApiResponse.java</h1>
+<pre class="source lang-java linenums">package com.jason.archetype.general.web.model;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+/**
+ * @author jasonCQ
+ * @version 1.0
+ */
+
+@ApiModel(description = &quot;Api返回结果&quot;)
+public class ApiResponse&lt;T&gt; {
+    @ApiModelProperty(&quot;操作状态&quot;)
+    private boolean state;
+    @ApiModelProperty(&quot;数据&quot;)
+    private T data;
+    @ApiModelProperty(&quot;错误信息&quot;)
+    private ErrorInfo error;
+
+<span class="nc" id="L20">    public ApiResponse() {</span>
+<span class="nc" id="L21">    }</span>
+
+    public boolean getState() {
+<span class="nc" id="L24">        return this.state;</span>
+    }
+
+    public void setState(boolean state) {
+<span class="nc" id="L28">        this.state = state;</span>
+<span class="nc" id="L29">    }</span>
+
+    public T getData() {
+<span class="nc" id="L32">        return this.data;</span>
+    }
+
+    public void setData(T data) {
+<span class="nc" id="L36">        this.data = data;</span>
+<span class="nc" id="L37">    }</span>
+
+    public ErrorInfo getError() {
+<span class="nc" id="L40">        return this.error;</span>
+    }
+
+    public void setError(ErrorInfo error) {
+<span class="nc" id="L44">        this.error = error;</span>
+<span class="nc" id="L45">    }</span>
+
+    public static &lt;T&gt; ApiResponse&lt;T&gt; success(T data) {
+<span class="nc" id="L48">        ApiResponse&lt;T&gt; apiReponse = new ApiResponse();</span>
+<span class="nc" id="L49">        apiReponse.setState(true);</span>
+<span class="nc" id="L50">        apiReponse.setData(data);</span>
+<span class="nc" id="L51">        return apiReponse;</span>
+    }
+
+    public static &lt;T&gt; ApiResponse&lt;T&gt; businessError(String errorMessage) {
+<span class="nc" id="L55">        return error(&quot;602&quot;, errorMessage);</span>
+    }
+
+    public static &lt;T&gt; ApiResponse&lt;T&gt; error(String errorCode, String errorMessage) {
+<span class="nc" id="L59">        ApiResponse&lt;T&gt; apiReponse = new ApiResponse();</span>
+<span class="nc" id="L60">        apiReponse.setState(false);</span>
+<span class="nc" id="L61">        ErrorInfo errorInfo = new ErrorInfo();</span>
+<span class="nc" id="L62">        errorInfo.setCode(errorCode);</span>
+<span class="nc" id="L63">        errorInfo.setMessage(errorMessage);</span>
+<span class="nc" id="L64">        apiReponse.setError(errorInfo);</span>
+<span class="nc" id="L65">        return apiReponse;</span>
+    }
+}
+
+@ApiModel(
+        description = &quot;Api错误信息&quot;
+)
+class ErrorInfo {
+    @ApiModelProperty(&quot;错误代码&quot;)
+    private String code;
+    @ApiModelProperty(&quot;错误信息&quot;)
+    private String message;
+
+<span class="nc" id="L78">    public ErrorInfo() {</span>
+<span class="nc" id="L79">    }</span>
+
+    public String getCode() {
+<span class="nc" id="L82">        return this.code;</span>
+    }
+
+    public void setCode(String code) {
+<span class="nc" id="L86">        this.code = code;</span>
+<span class="nc" id="L87">    }</span>
+
+    public String getMessage() {
+<span class="nc" id="L90">        return this.message;</span>
+    }
+
+    public void setMessage(String message) {
+<span class="nc" id="L94">        this.message = message;</span>
+<span class="nc" id="L95">    }</span>
+}
+</pre>
+<div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span>
+</div>
+</body>
+</html>

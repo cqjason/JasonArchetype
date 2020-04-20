@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/>
+    <link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/>
+    <title>ConcurrentKafkaConsumerConfiguration.java</title>
+    <link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/>
+    <script type="text/javascript" src="../../jacoco-resources/prettify.js"></script>
+</head>
+<body onload="window['PR_TAB_WIDTH']=4;prettyPrint()">
+<div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a
+        href="../../index.html" class="el_report">jason-general-jacoco</a> &gt; <a href="../index.html"
+                                                                                   class="el_bundle">jason-general-common</a>
+    &gt; <a href="index.source.html" class="el_package">com.jason.archetype.general.common.kafka.config</a> &gt; <span
+            class="el_source">ConcurrentKafkaConsumerConfiguration.java</span></div>
+<h1>ConcurrentKafkaConsumerConfiguration.java</h1>
+<pre class="source lang-java linenums">package com.jason.archetype.general.common.kafka.config;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author: sk-shanjiang
+ * @date: 2019/10/26 17:36
+ */
+@Configuration
+@EnableKafka
+<span class="fc" id="L22">public class ConcurrentKafkaConsumerConfiguration {</span>
+    @Value(&quot;${com.skspruce.ism.mobile.sync.base.ConcurrentKafkaConsumerConfiguration.concurrency:1}&quot;)
+    private int concurrency;
+
+    @Value(&quot;${spring.kafka.bootstrap-servers:127.0.0.1}&quot;)
+    private String servers;
+
+    @Value(&quot;${spring.kafka.consumer.auto-offset-reset:latest}&quot;)
+    private String autoOffestRest;
+
+    @Value(&quot;${spring.kafka.consumer.enable-auto-commit:false}&quot;)
+    private boolean enableAutoCommit;
+
+    @Value(&quot;${spring.kafka.consumer.group-id:test.group}&quot;)
+    private String groupId;
+
+    @Value(&quot;${spring.kafka.consumer.key-deserializer:org.apache.kafka.common.serialization.BytesDeserializer}&quot;)
+    private  String keyDeserializer;
+
+    @Value(&quot;${spring.kafka.consumer.value-deserializer:org.apache.kafka.common.serialization.BytesDeserializer}&quot;)
+    private String valueDeserializer;
+
+    @Value(&quot;${spring.kafka.consumer.max-poll-records:1000}&quot;)
+    private int maxPollRecords;
+
+    private Map&lt;String,Object&gt; propsMap;
+
+    public int getConcurrency() {
+<span class="fc" id="L50">        return concurrency;</span>
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory kafkaListenerContainerFactory() {
+<span class="fc" id="L55">        ConcurrentKafkaListenerContainerFactory&lt;String, String&gt; factory =</span>
+                new ConcurrentKafkaListenerContainerFactory&lt;&gt;();
+<span class="fc" id="L57">        factory.setConsumerFactory(consumerFactory());</span>
+<span class="fc" id="L58">        factory.setConcurrency(concurrency);</span>
+<span class="fc" id="L59">        factory.setBatchListener(true);</span>
+<span class="fc" id="L60">        factory.getContainerProperties()</span>
+<span class="fc" id="L61">                .setAckMode(ContainerProperties.AckMode.MANUAL);</span>
+<span class="fc" id="L62">        return factory;</span>
+    }
+
+    private ConsumerFactory&lt;String, String&gt; consumerFactory() {
+<span class="fc" id="L66">        return new DefaultKafkaConsumerFactory&lt;&gt;(consumerConfigs());</span>
+    }
+
+    /**
+     * config properties，protected access is provided for subclass modification
+     * @return
+     */
+    protected Map&lt;String,Object&gt; consumerConfigs(){
+<span class="fc" id="L74">        Map&lt;String,Object&gt; propsMap = new HashMap&lt;&gt;(8);</span>
+<span class="fc" id="L75">        propsMap.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,servers);</span>
+<span class="fc" id="L76">        propsMap.put(ConsumerConfig.GROUP_ID_CONFIG,groupId);</span>
+<span class="fc" id="L77">        propsMap.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,autoOffestRest);</span>
+<span class="fc" id="L78">        propsMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,enableAutoCommit);</span>
+<span class="fc" id="L79">        propsMap.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,keyDeserializer);</span>
+<span class="fc" id="L80">        propsMap.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,valueDeserializer);</span>
+<span class="fc" id="L81">        propsMap.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG,maxPollRecords);</span>
+<span class="fc" id="L82">        return propsMap;</span>
+    }
+}
+</pre>
+<div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span>
+</div>
+</body>
+</html>
