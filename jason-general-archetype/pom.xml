@@ -35,7 +35,7 @@
         <sonar.cpd.exclusions>${jacoco.coverage.exclusions}</sonar.cpd.exclusions>
         <ocean-projects.version>0.2.0</ocean-projects.version>
         <spring.kafka.version>2.4.3.RELEASE</spring.kafka.version>
-        <testng.version>7.1.0</testng.version>
+        <testng.version>7.5.1</testng.version>
         <mockito.version>3.1.0</mockito.version>
         <hadoop.version>3.1.0</hadoop.version>
     </properties>
